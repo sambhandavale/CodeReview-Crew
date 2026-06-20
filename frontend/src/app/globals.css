@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-discord-bg: #313338;
+  --color-discord-dark: #2B2D31;
+  --color-discord-darker: #1E1F22;
+  --color-discord-accent: #5865F2;
+  
+  --color-github-bg: #0d1117;
+  --color-github-surface: #161b22;
+  --color-github-border: #30363d;
+  --color-github-accent: #2f81f7;
+  
+  --color-background: #0d1117; /* GitHub Dark */
+  --color-foreground: #c9d1d9; /* GitHub Text */
+  --color-card: #161b22;
+  --color-border: #30363d;
+  --color-primary: #5865F2; /* Discord Blurple */
+  --color-primary-hover: #4752C4;
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glassmorphism utility classes */
+@layer utilities {
+  .glass-panel {
+    @apply bg-card/60 backdrop-blur-md border border-border rounded-xl;
+  }
+}
