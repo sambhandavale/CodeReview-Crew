@@ -1,35 +1,40 @@
 import asyncio
 import json
-from agents import (
-    run_security_agent,
-    run_bug_agent,
-    run_quality_agent,
-    run_performance_agent,
-    run_lead_agent
-)
+from agents import AGENTS, run_agent
 
 async def run_code_review_swarm(code: str):
     def make_event(event_type, data):
         return f"data: {json.dumps({'type': event_type, 'data': data})}\n\n"
 
-    yield make_event("status", "Initializing swarm...")
-    await asyncio.sleep(0.5)
-
-    yield make_event("status", "Worker agents analyzing concurrently...")
+    # We do not yield an initialization status here, as the frontend UI handles the "Reviewing X files" state.
+    # We will immediately start yielding results as agents finish.
     
-    sec_task = asyncio.create_task(run_security_agent(code))
-    bug_task = asyncio.create_task(run_bug_agent(code))
-    qual_task = asyncio.create_task(run_quality_agent(code))
-    perf_task = asyncio.create_task(run_performance_agent(code))
+    tasks = []
+    stagger_delay = 0.0
+    for agent_id, info in AGENTS.items():
+        # Create an async task for each agent that returns (agent_id, JSON string of findings)
+        async def agent_task(a_id=agent_id, a_name=info["name"], a_focus=info["focus"], delay=stagger_delay):
+            if delay > 0:
+                await asyncio.sleep(delay)
+            result_json = await run_agent(a_id, a_name, a_focus, code)
+            return a_id, result_json
+        
+        tasks.append(asyncio.create_task(agent_task()))
+        stagger_delay += 1.5 # Stagger each agent start by 1.5 seconds
 
-    sec_res, bug_res, qual_res, perf_res = await asyncio.gather(
-        sec_task, bug_task, qual_task, perf_task
-    )
+    # Yield as each agent completes
+    for completed_task in asyncio.as_completed(tasks):
+        a_id, result_json = await completed_task
+        try:
+            # Parse the JSON returned by the model
+            parsed_result = json.loads(result_json)
+        except json.JSONDecodeError:
+            parsed_result = {"findings": []}
+            
+        # Yield the specific agent's findings to the frontend
+        yield make_event("agent_done", {
+            "agent_id": a_id,
+            "findings": parsed_result.get("findings", [])
+        })
 
-    yield make_event("status", "Workers finished. Lead agent is synthesizing...")
-    
-    final_report = await run_lead_agent(code, sec_res, bug_res, qual_res, perf_res)
-
-    yield make_event("status", "Review complete!")
-    yield make_event("result", final_report)
     yield make_event("done", True)

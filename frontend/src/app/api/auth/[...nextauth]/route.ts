@@ -6,7 +6,7 @@ export const authOptions: NextAuthOptions = {
     GithubProvider({
       clientId: process.env.GITHUB_ID as string,
       clientSecret: process.env.GITHUB_SECRET as string,
-      authorization: { params: { scope: 'read:user user:email repo' } }, // Important: request 'repo' scope to read files
+      authorization: { params: { scope: 'read:user user:email public_repo' } }, // Only request public repo access — much less scary
     }),
   ],
   callbacks: {

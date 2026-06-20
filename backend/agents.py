@@ -1,91 +1,92 @@
 import os
 from google import genai
+from google.genai import types
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Initialize client. Assumes GEMINI_API_KEY is in environment.
 client = genai.Client()
+MODEL_FLASH = "gemini-3.5-flash"
 
-MODEL_FLASH = "gemini-2.5-flash"
+class Finding(BaseModel):
+    line: int = Field(description="The line number where the issue or suggestion occurs")
+    title: str = Field(description="A short, descriptive title of the finding")
+    description: str = Field(description="A detailed explanation of the issue")
+    severity: str = Field(description="The severity of the issue: 'critical', 'high', 'medium', 'low', or 'info'")
+    suggestion: str = Field(description="A code snippet or actionable advice to fix the issue")
 
-async def run_security_agent(code: str) -> str:
-    prompt = f"""You are the Security Agent for Code Review Crew.
-Analyze this code for vulnerabilities, injections, hardcoded secrets, and insecure practices.
-Provide a concise list of findings. If none, say "No security issues found."
+class FindingList(BaseModel):
+    findings: list[Finding]
+
+async def run_agent(agent_id: str, agent_name: str, focus: str, code: str) -> str:
+    prompt = f"""You are the {agent_name} Agent for Code Review Crew.
+Your specialized focus is: {focus}
+
+Analyze this code and provide a list of findings specifically related to your focus area.
+If there are no issues in your area, return an empty list of findings.
+
 Code to review:
 {code}
 """
-    response = await client.aio.models.generate_content(
-        model=MODEL_FLASH,
-        contents=prompt
-    )
-    return response.text
+    for attempt in range(5):
+        try:
+            response = await client.aio.models.generate_content(
+                model=MODEL_FLASH,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=FindingList,
+                )
+            )
+            return response.text
+        except Exception as e:
+            err_str = str(e)
+            if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "503" in err_str or "UNAVAILABLE" in err_str:
+                delay = 5 + (attempt * 3) # Progressive backoff: 5s, 8s, 11s, 14s
+                print(f"Agent {agent_name} hit rate/demand limit. Retrying in {delay}s... (Attempt {attempt+1}/5)")
+                import asyncio
+                await asyncio.sleep(delay)
+            else:
+                print(f"Agent {agent_name} failed: {e}")
+                return '{"findings": []}'
+                
+    print(f"Agent {agent_name} failed after retries.")
+    return '{"findings": []}'
 
-async def run_bug_agent(code: str) -> str:
-    prompt = f"""You are the Bug Hunter Agent for Code Review Crew.
-Analyze this code for edge cases, off-by-one errors, null pointers, and logical flaws.
-Provide a concise list of findings. If none, say "No bugs found."
-Code to review:
-{code}
-"""
-    response = await client.aio.models.generate_content(
-        model=MODEL_FLASH,
-        contents=prompt
-    )
-    return response.text
+# The 8 Agent definitions mapped by ID
+AGENTS = {
+    "purist": {
+        "name": "Code Purist",
+        "focus": "Code readability, SOLID principles, naming conventions, formatting, and stylistic consistency."
+    },
+    "detective": {
+        "name": "Bug Detective",
+        "focus": "Logic errors, edge cases, off-by-one errors, null pointers, and state management bugs."
+    },
+    "sentinel": {
+        "name": "Security Sentinel",
+        "focus": "Security vulnerabilities, injection risks, hardcoded secrets, and insecure data handling."
+    },
+    "profiler": {
+        "name": "Performance Profiler",
+        "focus": "Big O time/space complexity, memory leaks, inefficient loops, and rendering bottlenecks."
+    },
+    "auditor": {
+        "name": "Documentation Auditor",
+        "focus": "Missing comments, outdated documentation, unclear function signatures, and docstring quality."
+    },
+    "guardian": {
+        "name": "Dependency Guardian",
+        "focus": "Outdated imports, vulnerable packages, heavy bundle sizes, and unused dependencies."
+    },
+    "analyst": {
+        "name": "Test Coverage Analyst",
+        "focus": "Missing unit tests, fragile test conditions, untested edge cases, and mocked data flaws."
+    },
+    "advisor": {
+        "name": "Architecture Advisor",
+        "focus": "System design, component coupling, folder structure, design patterns, and scalability."
+    }
+}
 
-async def run_quality_agent(code: str) -> str:
-    prompt = f"""You are the Code Quality Agent for Code Review Crew.
-Analyze this code for readability, SOLID principles, naming conventions, and dead code.
-Provide a concise list of findings.
-Code to review:
-{code}
-"""
-    response = await client.aio.models.generate_content(
-        model=MODEL_FLASH,
-        contents=prompt
-    )
-    return response.text
-
-async def run_performance_agent(code: str) -> str:
-    prompt = f"""You are the Performance Agent for Code Review Crew.
-Analyze this code for Big O complexity, memory leaks, and inefficient loops.
-Provide a concise list of findings.
-Code to review:
-{code}
-"""
-    response = await client.aio.models.generate_content(
-        model=MODEL_FLASH,
-        contents=prompt
-    )
-    return response.text
-
-async def run_lead_agent(code: str, sec: str, bug: str, qual: str, perf: str) -> str:
-    prompt = f"""You are the Lead Reviewer Agent for Code Review Crew.
-Synthesize the findings from your team into a final Markdown report.
-Assign a final grade (e.g. A, B+, C-) at the top.
-Remove duplicates and resolve conflicting advice.
-
-Original Code:
-{code}
-
-Security Findings:
-{sec}
-
-Bug Findings:
-{bug}
-
-Quality Findings:
-{qual}
-
-Performance Findings:
-{perf}
-
-Output the final Markdown report now. Do not include any polite conversational fluff, just the report.
-"""
-    response = await client.aio.models.generate_content(
-        model=MODEL_FLASH,
-        contents=prompt
-    )
-    return response.text
