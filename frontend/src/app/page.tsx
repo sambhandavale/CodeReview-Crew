@@ -51,7 +51,7 @@ function LandingPage() {
           <span className="text-primary">AI-Powered Swarms</span>
         </h1>
         <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-10">
-          From bug detection to performance optimization. Automate your entire code review process with an elite team of specialized autonomous agents.
+          From bug detection to auto-fixing with live Git Diffs. Automate your entire code review process with a hierarchical, RAG-enabled team of autonomous agents.
         </p>
         <div className="flex items-center justify-center gap-4">
           <button className="px-8 py-4 rounded-lg bg-primary text-white font-bold text-lg hover:bg-primary-hover shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all">
@@ -100,8 +100,8 @@ function LandingPage() {
           </div>
           <div className="glass-panel p-8 relative overflow-hidden border-t-4 border-t-primary">
             <div className="absolute top-0 right-0 p-4 text-8xl font-black text-slate-100/50">3</div>
-            <h3 className="text-2xl font-bold mb-4 relative z-10">Lead Synthesis</h3>
-            <p className="text-muted-foreground relative z-10 leading-relaxed">The Lead Reviewer Agent collects findings from all 8 workers, resolves conflicting advice, removes duplicates, and generates a unified, beautifully formatted Markdown report card with severity grades.</p>
+            <h3 className="text-2xl font-bold mb-4 relative z-10">Lead Synthesis & Auto-Fix</h3>
+            <p className="text-muted-foreground relative z-10 leading-relaxed">The Lead Reviewer Agent collects findings from all 8 workers, removes duplicates, and generates a unified report card complete with one-click Git Diff auto-fixes.</p>
           </div>
         </div>
       </section>
@@ -203,6 +203,8 @@ function LandingPage() {
           </div>
         </div>
       </section>
+
+      <ArchitectureDiagram />
 
       {/* FAQ Section */}
       <FAQSection />
@@ -319,6 +321,69 @@ function SwarmVisualization() {
               {agent.name}
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ArchitectureDiagram() {
+  return (
+    <section className="py-24 px-6 max-w-6xl mx-auto border-y border-border bg-[#fafbfc]">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl md:text-5xl font-extrabold mb-6">System Architecture</h2>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          A powerful hierarchical pipeline with global codebase context.
+        </p>
+      </div>
+      
+      <div className="flex flex-col items-center gap-6 font-mono text-sm">
+        {/* User Input */}
+        <div className="bg-white border-2 border-slate-300 p-4 rounded-xl shadow-sm w-72 text-center font-bold">
+          <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider">Step 1</div>
+          User Selects Repo & Files
+        </div>
+        
+        <div className="w-0.5 h-8 bg-slate-300"></div>
+        
+        {/* Context & Planning */}
+        <div className="flex flex-col md:flex-row gap-8 w-full max-w-3xl justify-center">
+          <div className="bg-indigo-50 border-2 border-indigo-200 p-5 rounded-xl shadow-sm text-center flex-1">
+             <div className="text-xs text-indigo-600 font-bold mb-2 uppercase tracking-widest">1. Architecture Advisor</div>
+             <p className="text-indigo-900 leading-relaxed text-xs font-sans">Runs first to analyze structural patterns and sets the architectural context for all other agents.</p>
+          </div>
+          <div className="bg-slate-800 text-white border-2 border-slate-700 p-5 rounded-xl shadow-sm text-center flex-1 relative overflow-hidden">
+             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] bg-[length:10px_10px]"></div>
+             <div className="text-xs text-slate-300 font-bold mb-2 uppercase tracking-widest relative z-10">2. Tool Retrieval (RAG)</div>
+             <p className="text-slate-200 leading-relaxed text-xs font-sans relative z-10">Agents use GitHub API tools to search the entire codebase and read files on-demand for global context.</p>
+          </div>
+        </div>
+
+        <div className="w-0.5 h-8 bg-slate-300"></div>
+
+        {/* Worker Swarm */}
+        <div className="bg-blue-50 border-2 border-blue-200 p-6 rounded-xl shadow-sm w-full max-w-4xl text-center">
+          <div className="text-xs text-blue-600 font-bold mb-5 uppercase tracking-widest">3. Parallel Execution Swarm (Gemini 3.5 Flash)</div>
+          <div className="flex flex-wrap justify-center gap-3">
+             {["Security", "Bugs", "Performance", "Style", "Docs", "Dependencies", "Testing"].map(agent => (
+                <div key={agent} className="bg-white px-4 py-2 border border-blue-100 rounded-lg shadow-sm font-semibold text-slate-700">
+                  {agent}
+                </div>
+             ))}
+          </div>
+        </div>
+
+        <div className="w-0.5 h-8 bg-slate-300"></div>
+
+        {/* Lead Reviewer */}
+        <div className="bg-emerald-50 border-2 border-emerald-200 p-6 rounded-xl shadow-sm w-full max-w-2xl text-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-300 to-teal-400"></div>
+          <div className="text-xs text-emerald-700 font-bold mb-2 uppercase tracking-widest">4. Lead Reviewer</div>
+          <p className="text-emerald-900 mb-4 font-sans text-sm font-semibold">Deduplicates, Resolves Conflicts, and Generates Git Diffs</p>
+          <div className="bg-slate-900 px-4 py-3 border border-emerald-900/50 rounded-lg font-mono text-xs text-left overflow-x-auto shadow-inner">
+             <div className="text-red-400">- const result = processData(data);</div>
+             <div className="text-green-400">+ const result = useMemo(() =&gt; processData(data), [data]);</div>
+          </div>
         </div>
       </div>
     </section>
