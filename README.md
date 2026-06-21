@@ -3,93 +3,148 @@
     <h1 style="margin: 0; font-size: 3rem; color: #0ea5e9;">🤖 Code Review Crew</h1>
   </div>
   <h3>The Ultimate AI Agent Swarm for Deep Codebase Analysis</h3>
-  <p>Powered by Gemini 3.5 Flash & Next.js</p>
+  <p><b>Built for the Gemini API Hackathon</b></p>
 </div>
 
 ---
 
-## 🌟 What is Code Review Crew?
-Code Review Crew is an intelligent, multi-agent code review platform that unleashes a **9-Agent Hierarchical Swarm** on your GitHub repositories. Rather than relying on a single AI to superficially scan your code, we deploy specialized personas—ranging from a *Security Sentinel* to a *Performance Profiler*—to aggressively analyze every inch of your codebase in parallel.
+## 🏆 Gemini API Hackathon Spotlight
+This project was built from the ground up to showcase the immense power, speed, and tooling capabilities of the Gemini ecosystem. Here is how we leveraged it:
 
-## 🎯 Who is it for?
-- **Engineering Teams:** Looking to automate mundane PR reviews while maintaining high architectural and security standards.
-- **Tech Leads / Staff Engineers:** Wanting an automated "second pair of eyes" to enforce custom team guidelines and coding conventions.
-- **Solo Developers:** Needing specialized feedback on performance bottlenecks, edge-case bugs, or vulnerability risks before pushing to production.
-
-## 💡 Why is it required?
-1. **The Context Problem:** Standard LLMs lose focus when asked to review thousands of lines of code. By using a *Swarm Architecture*, each agent only focuses on one specific domain (e.g. only looking for SQL injections, or only looking for Big-O inefficiencies).
-2. **The "Fix It For Me" Gap:** Identifying a bug is only half the battle. Our agents automatically generate unified Git diffs so you can fix issues with a single click.
-3. **The Interrogation Problem:** Ever disagree with an AI's review? We built a real-time chat interface that lets you argue, interrogate, or ask for clarification directly from the specific agent that flagged the line of code.
-
-## 🚀 How Does It Do It? (The Architecture)
-
-### 1. Context Gathering (GitHub RAG)
-The backend authenticates with the GitHub API and pulls down your selected files, along with global repository context (like your `README.md`).
-
-### 2. The Hierarchical Swarm Execution
-We built a highly resilient, asynchronous orchestrator in Python using `asyncio`:
-- **Step 1:** The `Architecture Advisor` runs synchronously first to map out the high-level system design.
-- **Step 2:** **7 Worker Agents** execute in true parallel. Each agent receives the exact same codebase, but uses a highly specialized system prompt to isolate issues in their domain:
-  - 🛡️ Security Sentinel
-  - 🐛 Bug Detective
-  - ⚡ Performance Profiler
-  - 📝 Documentation Auditor
-  - 📦 Dependency Guardian
-  - 🧪 Test Coverage Analyst
-  - ✨ Code Purist
-- **Step 3:** The `Lead Reviewer` runs last, synthesizing all the reports, deduplicating repetitive issues, and streaming the final unified JSON back to the frontend via Server-Sent Events (SSE).
-
-### 3. Graceful Rate-Limiting
-To survive the brutal constraints of free-tier AI APIs, the backend utilizes an `asyncio.Semaphore` combined with exponential backoff. If Gemini throws a `429` (Rate Limit) or `503` (Overloaded), the specific agent gracefully sleeps and retries without crashing the rest of the swarm.
+1. **The New Official SDK (`google-genai`):** We strictly utilized the brand new official Google GenAI Python SDK (`google-genai`). We took full advantage of its typed schemas, streaming capabilities, and native asynchronous support to orchestrate our massive swarm.
+2. **Gemini 3.5 Flash for Swarm Intelligence:** A true Multi-Agent Swarm requires calling the LLM dozens of times concurrently. We chose **Gemini 3.5 Flash** because its unprecedented speed and massive context window make parallel codebase analysis not just possible, but blisteringly fast and economical.
+3. **Native Function Calling (Tools):** We didn't just pass code in a prompt. We equipped the Gemini models with dynamic `Tools` (such as `search_codebase` and `read_file`), allowing the agents to natively trigger GitHub API RAG searches if they lacked context about an imported function.
+4. **Google Cloud Platform (GCP) Deployment:** The entire project is natively deployed on Google Cloud. The backend and frontend are containerized and hosted on **Google Cloud Run** using serverless architecture, with **Cloud Build** driving our continuous deployment pipeline.
 
 ---
 
-## ✨ Key Features
+## 🌟 What is Code Review Crew?
+Code Review Crew is an intelligent, multi-agent code review platform that unleashes a **9-Agent Hierarchical Swarm** on your GitHub repositories. Rather than relying on a single AI prompt to superficially scan your code, we deploy specialized, highly-focused AI personas—ranging from a *Security Sentinel* to a *Performance Profiler*—to aggressively analyze every inch of your codebase in true parallel.
 
-- **Interactive Architecture Graph:** Visualize your entire GitHub repository as a physics-based interactive node graph before you begin reviewing.
-- **Custom Team Guidelines:** Enforce specific rules (e.g. "Do not use Classes, use functional programming only").
-- **Live Swarm Visualization:** Watch the agents light up in real-time as they scan your code AST.
-- **Inline Unified Diffs:** Agents don't just complain—they write the fix. View syntax-highlighted git diffs right next to the broken code.
-- **Context-Aware Chat:** Click "Chat" on any finding to open a persistent websocket connection with the specific agent (e.g. Security Sentinel) who flagged it. The chat is pre-loaded with the exact lines of code and context of the finding.
+## 🎯 Who is it for?
+- **Engineering Teams:** Looking to automate mundane PR reviews while maintaining high architectural and security standards.
+- **Tech Leads / Staff Engineers:** Wanting an automated "second pair of eyes" to enforce custom team guidelines, coding conventions, and clean architecture.
+- **Solo Developers:** Needing specialized feedback on performance bottlenecks, edge-case bugs, or vulnerability risks before pushing to production.
 
-## 🛠️ Tech Stack
-- **Frontend:** Next.js 15 (App Router), React, Tailwind CSS, Lucide Icons
-- **Backend:** Python, FastAPI, asyncio, Server-Sent Events (SSE)
-- **AI / LLM:** Google Gemini 3.5 Flash SDK (`google-genai`)
-- **Authentication:** NextAuth.js (GitHub OAuth)
-- **Deployment:** Google Cloud Run (Docker)
+---
+
+## 🚀 Swarm Architecture Diagram
+
+```mermaid
+graph TD
+    User([👨‍💻 User]) --> |Selects Repo & Files| Frontend(🖥️ Next.js Frontend)
+    
+    subgraph GitHub
+    Frontend --> |OAuth Token| GitHubAPI[("🐙 GitHub API")]
+    end
+
+    Frontend --> |POST /api/review| Backend(⚙️ FastAPI Backend)
+    Backend -.-> |Server-Sent Events Stream| Frontend
+    
+    Backend --> |Fetch Repo Context| GitHubAPI
+    
+    subgraph Swarm[🤖 Agentic Swarm Orchestrator]
+        Advisor[Layers Architecture Advisor]
+        
+        subgraph Workers[Parallel Workers]
+            Security[🛡️ Security Sentinel]
+            Bugs[🐛 Bug Detective]
+            Perf[⚡ Performance Profiler]
+            Docs[📝 Documentation Auditor]
+            Deps[📦 Dependency Guardian]
+            Test[🧪 Test Coverage Analyst]
+            Purist[✨ Code Purist]
+        end
+        
+        Lead[Network Lead Reviewer]
+        
+        Advisor --> |Sets Global Context| Workers
+        Workers --> |Raw Findings| Lead
+    end
+    
+    Backend --> Swarm
+    
+    subgraph Gemini[✨ Gemini API Ecosystem]
+        Flash[⚡ Gemini 3.5 Flash Model]
+        Tools[🛠️ Function Calling / Tools]
+        Flash <--> Tools
+    end
+    
+    Workers <--> |Parallel API Calls via asyncio| Gemini
+    Lead <--> |Synthesize & Deduplicate| Gemini
+    Tools -.-> |Dynamic Code Search| GitHubAPI
+```
+
+---
+
+## 🧠 Core Concepts & Innovations
+
+### 1. Hierarchical Agentic Swarms
+Instead of a monolithic AI, we use a structured swarm:
+- **The Architect (Synchronous):** Analyzes the global scope of the repository first to establish the big picture.
+- **The Workers (Parallel):** 7 independent agents execute concurrently. Each agent is given a strict, narrow "focus area" (e.g., only looking for SQL injections, or only looking for Big-O inefficiencies) to prevent LLM hallucination and context-loss.
+- **The Lead Reviewer (Synthesizer):** Runs last to aggregate, deduplicate, and finalize the reports from the workers into a single, cohesive JSON response.
+
+### 2. Asynchronous Concurrency & Rate Limiting
+To achieve massive parallel execution without hitting API limits, the backend implements a global `asyncio.Semaphore`. Combined with an intelligent exponential backoff algorithm, the orchestrator gracefully queues and throttles API requests, ensuring 100% reliability.
+
+### 3. Real-time Server-Sent Events (SSE)
+We built a custom SSE streaming pipeline from the Python FastAPI backend to the Next.js frontend. As soon as an individual agent finishes its analysis, the finding is instantly streamed and rendered on the UI, rather than making the user wait for the entire swarm to finish.
+
+### 4. Auto-Fix (Unified Git Diffs)
+Identifying a bug is only half the battle. Our agents automatically generate unified Git diff strings. The frontend parses these strings and renders beautiful, syntax-highlighted inline diffs right next to your broken code, complete with a one-click "Apply Fix" feature.
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+| Category | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend Framework** | `Next.js 15` (App Router) | Core React framework for building the UI and routing. |
+| **Styling & UI** | `Tailwind CSS`, `lucide-react` | Utility-first styling and beautiful SVG icon sets. |
+| **Authentication** | `NextAuth.js` | Managing secure GitHub OAuth login flows. |
+| **Backend API** | `Python 3.12`, `FastAPI` | High-performance asynchronous backend server. |
+| **AI Integration** | `google-genai` SDK | Official Gemini SDK to interact with `Gemini 3.5 Flash`. |
+| **Concurrency** | `asyncio` | Python library to run the Swarm in true parallel. |
+| **Data Streaming** | `Server-Sent Events (SSE)` | Streaming agent findings in real-time to the frontend. |
+| **Deployment** | `Google Cloud Run` | Serverless container hosting for both Frontend and Backend. |
+| **CI/CD** | `Google Cloud Build` | Continuous automated deployment from the GitHub repository. |
 
 ---
 
 ## 💻 Running Locally
 
-### Backend Setup
+### 1. Backend Setup
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install uv
 uv pip install -r pyproject.toml
-uvicorn main:app --reload
 ```
-
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Environment Variables
-Create a `.env.local` in the `frontend` directory:
-```env
-GITHUB_ID=your_github_client_id
-GITHUB_SECRET=your_github_client_secret
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_secret_string
-```
-
 Create a `.env` in the `backend` directory:
 ```env
 GEMINI_API_KEY=your_gemini_api_key
+```
+Start the server:
+```bash
+uvicorn main:app --reload
+```
+
+### 2. Frontend Setup
+```bash
+cd frontend
+npm install
+```
+Create a `.env.local` in the `frontend` directory:
+```env
+GITHUB_ID=your_github_oauth_client_id
+GITHUB_SECRET=your_github_oauth_client_secret
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=a_random_secure_string
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+Start the frontend:
+```bash
+npm run dev
 ```
