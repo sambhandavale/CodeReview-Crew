@@ -476,9 +476,9 @@ function Footer() {
       </div>
       
       <div className="max-w-7xl mx-auto border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground font-medium">
-        <p>© 2026 Code Review Crew. Built for the Gemini Hackathon.</p>
+        <p>© 2026 Code Review Crew.</p>
         <div className="flex items-center gap-8 mt-4 md:mt-0">
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
+          <a href="https://github.com/sambhandavale/CodeReview-Crew" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
         </div>
       </div>
     </footer>

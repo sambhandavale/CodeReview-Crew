@@ -2,7 +2,7 @@
   <div style="background: rgba(14, 165, 233, 0.1); padding: 20px; border-radius: 24px; display: inline-block; margin-bottom: 20px;">
     <h1 style="margin: 0; font-size: 3rem; color: #0ea5e9;">🤖 Code Review Crew</h1>
   </div>
-  <h3>The Ultimate AI Agent Swarm for Deep Codebase Analysis</h3>
+  <h3>The Ultimate Agentic Swarm for Deep Codebase Analysis</h3>
   <p><b>Built for the Gemini API Hackathon</b></p>
 </div>
 
@@ -11,10 +11,10 @@
 ## 🏆 Gemini API Hackathon Spotlight
 This project was built from the ground up to showcase the immense power, speed, and tooling capabilities of the Gemini ecosystem. Here is how we leveraged it:
 
-1. **The New Official SDK (`google-genai`):** We strictly utilized the brand new official Google GenAI Python SDK (`google-genai`). We took full advantage of its typed schemas, streaming capabilities, and native asynchronous support to orchestrate our massive swarm.
+1. **The New Official SDK (`google-genai`):** We strictly utilized the brand new official Google GenAI Python SDK. We took full advantage of its typed schemas, streaming capabilities, and native asynchronous support to orchestrate our massive swarm.
 2. **Gemini 2.5 Flash for Swarm Intelligence:** A true Multi-Agent Swarm requires calling the LLM dozens of times concurrently. We chose **Gemini 2.5 Flash** because its unprecedented speed and massive context window make parallel codebase analysis not just possible, but blisteringly fast and economical.
-3. **Native Function Calling (Tools):** We didn't just pass code in a prompt. We equipped the Gemini models with dynamic `Tools` (such as `search_codebase` and `read_file`), allowing the agents to natively trigger GitHub API RAG searches if they lacked context about an imported function.
-4. **Google Cloud Platform (GCP) Deployment:** The entire project is natively deployed on Google Cloud. The backend and frontend are containerized and hosted on **Google Cloud Run** using serverless architecture, with **Cloud Build** driving our continuous deployment pipeline.
+3. **Retrieval-Augmented Generation (RAG):** We heavily utilize RAG to inject deep repository context into our workflow, ensuring the swarm delivers hyper-accurate, project-specific insights rather than generic advice.
+4. **Intelligent Auto-Fix Engine:** We built a two-step resilient patching engine that leverages Gemini 2.5 Flash as a fallback merge engine to perfectly weave fixes into your code before automatically pushing Pull Requests to GitHub.
 
 ---
 
@@ -23,8 +23,8 @@ Code Review Crew is an intelligent, multi-agent code review platform that unleas
 
 ## 🎯 Who is it for?
 - **Engineering Teams:** Looking to automate mundane PR reviews while maintaining high architectural and security standards.
-- **Tech Leads / Staff Engineers:** Wanting an automated "second pair of eyes" to enforce custom team guidelines, coding conventions, and clean architecture.
-- **Solo Developers:** Needing specialized feedback on performance bottlenecks, edge-case bugs, or vulnerability risks before pushing to production.
+- **Tech Leads / Staff Engineers:** Wanting an automated "second pair of eyes" to enforce custom team guidelines and clean architecture.
+- **Solo Developers:** Needing specialized feedback on edge-case bugs, or vulnerability risks before pushing to production.
 
 ---
 
@@ -32,47 +32,49 @@ Code Review Crew is an intelligent, multi-agent code review platform that unleas
 
 ```mermaid
 graph TD
-    User([👨‍💻 User]) --> |Selects Repo & Files| Frontend(🖥️ Next.js Frontend)
+    User([👨‍💻 User]) --> |1. Selects Repo & Files| Frontend(🖥️ Next.js Frontend)
     
-    subgraph GitHub
-    Frontend --> |OAuth Token| GitHubAPI[("🐙 GitHub API")]
+    subgraph GitHub Ecosystem
+    Frontend --> |OAuth Authentication| GitHubAPI[("🐙 GitHub API")]
+    Backend -.-> |Create Branch & Pull Request| GitHubAPI
+    Backend --> |RAG Context Fetch| GitHubAPI
     end
 
-    Frontend --> |POST /api/review| Backend(⚙️ FastAPI Backend)
-    Backend -.-> |Server-Sent Events Stream| Frontend
+    Frontend --> |2. Start Review| Backend(⚙️ FastAPI Backend)
+    Backend -.-> |3. Server-Sent Events Stream| Frontend
     
-    Backend --> |Fetch Repo Context| GitHubAPI
-    
-    subgraph Swarm[🤖 Agentic Swarm Orchestrator]
-        Advisor[Layers Architecture Advisor]
+    subgraph Swarm Orchestrator[🤖 Agentic Swarm]
+        Advisor[Architecture Advisor]
         
-        subgraph Workers[Parallel Workers]
-            Security[🛡️ Security Sentinel]
-            Bugs[🐛 Bug Detective]
-            Perf[⚡ Performance Profiler]
-            Docs[📝 Documentation Auditor]
-            Deps[📦 Dependency Guardian]
-            Test[🧪 Test Coverage Analyst]
-            Purist[✨ Code Purist]
+        subgraph Parallel Workers
+            Security[🛡️ Security]
+            Bugs[🐛 Bugs]
+            Perf[⚡ Performance]
+            Docs[📝 Docs]
+            Deps[📦 Dependencies]
+            Test[🧪 Tests]
+            Purist[✨ Purist]
         end
         
-        Lead[Network Lead Reviewer]
+        Lead[Lead Reviewer]
         
-        Advisor --> |Sets Global Context| Workers
-        Workers --> |Raw Findings| Lead
+        Advisor --> |Sets Global Context| Parallel Workers
+        Parallel Workers --> |Raw Findings| Lead
     end
     
-    Backend --> Swarm
+    Backend <--> Swarm Orchestrator
     
-    subgraph Gemini[✨ Gemini API Ecosystem]
-        Flash[⚡ Gemini 2.5 Flash Model]
-        Tools[🛠️ Function Calling / Tools]
-        Flash <--> Tools
+    subgraph Google Cloud & AI[✨ Google GenAI]
+        Flash[⚡ Gemini 2.5 Flash]
+        MergeEngine[🔧 Intelligent Fallback Patcher]
     end
     
-    Workers <--> |Parallel API Calls via asyncio| Gemini
-    Lead <--> |Synthesize & Deduplicate| Gemini
-    Tools -.-> |Dynamic Code Search| GitHubAPI
+    Parallel Workers <--> |Parallel Async Calls| Flash
+    Lead <--> |Synthesize Findings| Flash
+    
+    Frontend --> |4. One-Click Apply Fix| FixEngine(🏗️ Auto-Fix Pipeline)
+    FixEngine <--> MergeEngine
+    FixEngine --> |Push Patch & PR| GitHubAPI
 ```
 
 ---
@@ -82,17 +84,17 @@ graph TD
 ### 1. Hierarchical Agentic Swarms
 Instead of a monolithic AI, we use a structured swarm:
 - **The Architect (Synchronous):** Analyzes the global scope of the repository first to establish the big picture.
-- **The Workers (Parallel):** 7 independent agents execute concurrently. Each agent is given a strict, narrow "focus area" (e.g., only looking for SQL injections, or only looking for Big-O inefficiencies) to prevent LLM hallucination and context-loss.
-- **The Lead Reviewer (Synthesizer):** Runs last to aggregate, deduplicate, and finalize the reports from the workers into a single, cohesive JSON response.
+- **The Workers (Parallel):** 7 independent agents execute concurrently. Each agent is given a strict, narrow "focus area" (e.g., only looking for SQL injections) to prevent LLM hallucination and context-loss.
+- **The Lead Reviewer (Synthesizer):** Runs last to aggregate, deduplicate, and finalize the reports into a single, cohesive JSON response.
 
-### 2. Asynchronous Concurrency & Rate Limiting
-To achieve massive parallel execution without hitting API limits, the backend implements a global `asyncio.Semaphore`. Combined with an intelligent exponential backoff algorithm, the orchestrator gracefully queues and throttles API requests, ensuring 100% reliability.
+### 2. Interactive 2D Architecture Graph
+Rendering an entire enterprise repository can be overwhelming. We integrated `react-force-graph-2d` using the HTML5 Canvas API to render an interactive, physics-based repository dependency graph so developers can visualize their codebase instantly.
 
 ### 3. Real-time Server-Sent Events (SSE)
-We built a custom SSE streaming pipeline from the Python FastAPI backend to the Next.js frontend. As soon as an individual agent finishes its analysis, the finding is instantly streamed and rendered on the UI, rather than making the user wait for the entire swarm to finish.
+We built a custom SSE streaming pipeline from the Python FastAPI backend to the Next.js frontend. As soon as an individual agent finishes its analysis, the finding is instantly streamed and rendered on the UI, resulting in a blazing-fast, staggered UI reveal.
 
-### 4. Auto-Fix (Unified Git Diffs)
-Identifying a bug is only half the battle. Our agents automatically generate unified Git diff strings. The frontend parses these strings and renders beautiful, syntax-highlighted inline diffs right next to your broken code, complete with a one-click "Apply Fix" feature.
+### 4. One-Click Pull Request Auto-Fixes
+Identifying a bug is only half the battle. Our platform automatically generates unified Git diffs. If you agree with the finding, click "Apply Fix" and our backend intercept the diff, perfectly weaves it into the original file (using a deterministic patcher and Gemini fallback), creates a new branch, and instantly opens a Pull Request directly on your GitHub repository.
 
 ---
 
@@ -102,6 +104,7 @@ Identifying a bug is only half the battle. Our agents automatically generate uni
 | :--- | :--- | :--- |
 | **Frontend Framework** | `Next.js 15` (App Router) | Core React framework for building the UI and routing. |
 | **Styling & UI** | `Tailwind CSS`, `lucide-react` | Utility-first styling and beautiful SVG icon sets. |
+| **Visualization** | `react-force-graph-2d` | HTML5 Canvas-based 2D Physics Graph for architecture visualization. |
 | **Authentication** | `NextAuth.js` | Managing secure GitHub OAuth login flows. |
 | **Backend API** | `Python 3.12`, `FastAPI` | High-performance asynchronous backend server. |
 | **AI Integration** | `google-genai` SDK | Official Gemini SDK to interact with `Gemini 2.5 Flash`. |
