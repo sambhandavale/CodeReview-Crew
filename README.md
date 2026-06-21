@@ -12,7 +12,7 @@
 This project was built from the ground up to showcase the immense power, speed, and tooling capabilities of the Gemini ecosystem. Here is how we leveraged it:
 
 1. **The New Official SDK (`google-genai`):** We strictly utilized the brand new official Google GenAI Python SDK (`google-genai`). We took full advantage of its typed schemas, streaming capabilities, and native asynchronous support to orchestrate our massive swarm.
-2. **Gemini 3.5 Flash for Swarm Intelligence:** A true Multi-Agent Swarm requires calling the LLM dozens of times concurrently. We chose **Gemini 3.5 Flash** because its unprecedented speed and massive context window make parallel codebase analysis not just possible, but blisteringly fast and economical.
+2. **Gemini 2.5 Flash for Swarm Intelligence:** A true Multi-Agent Swarm requires calling the LLM dozens of times concurrently. We chose **Gemini 2.5 Flash** because its unprecedented speed and massive context window make parallel codebase analysis not just possible, but blisteringly fast and economical.
 3. **Native Function Calling (Tools):** We didn't just pass code in a prompt. We equipped the Gemini models with dynamic `Tools` (such as `search_codebase` and `read_file`), allowing the agents to natively trigger GitHub API RAG searches if they lacked context about an imported function.
 4. **Google Cloud Platform (GCP) Deployment:** The entire project is natively deployed on Google Cloud. The backend and frontend are containerized and hosted on **Google Cloud Run** using serverless architecture, with **Cloud Build** driving our continuous deployment pipeline.
 
@@ -65,7 +65,7 @@ graph TD
     Backend --> Swarm
     
     subgraph Gemini[✨ Gemini API Ecosystem]
-        Flash[⚡ Gemini 3.5 Flash Model]
+        Flash[⚡ Gemini 2.5 Flash Model]
         Tools[🛠️ Function Calling / Tools]
         Flash <--> Tools
     end
@@ -104,7 +104,7 @@ Identifying a bug is only half the battle. Our agents automatically generate uni
 | **Styling & UI** | `Tailwind CSS`, `lucide-react` | Utility-first styling and beautiful SVG icon sets. |
 | **Authentication** | `NextAuth.js` | Managing secure GitHub OAuth login flows. |
 | **Backend API** | `Python 3.12`, `FastAPI` | High-performance asynchronous backend server. |
-| **AI Integration** | `google-genai` SDK | Official Gemini SDK to interact with `Gemini 3.5 Flash`. |
+| **AI Integration** | `google-genai` SDK | Official Gemini SDK to interact with `Gemini 2.5 Flash`. |
 | **Concurrency** | `asyncio` | Python library to run the Swarm in true parallel. |
 | **Data Streaming** | `Server-Sent Events (SSE)` | Streaming agent findings in real-time to the frontend. |
 | **Deployment** | `Google Cloud Run` | Serverless container hosting for both Frontend and Backend. |

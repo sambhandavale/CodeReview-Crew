@@ -46,6 +46,7 @@ export function ReviewPageContent() {
   const [previewFile, setPreviewFile] = useState<{ path: string; content: string } | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [reviewFindings, setReviewFindings] = useState<CodeFinding[]>([]);
+  const [reviewedFiles, setReviewedFiles] = useState<{ path: string; content: string }[]>([]);
   const [activeReviewFile, setActiveReviewFile] = useState<{ path: string; content: string } | null>(null);
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [customInstructions, setCustomInstructions] = useState<string>("");
@@ -84,7 +85,7 @@ export function ReviewPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           agent_name: activeChatFinding.agent,
-          code_snippet: activeReviewFile?.content || "",
+          code_snippet: reviewedFiles.find(f => f.path === activeChatFinding.file)?.content || activeReviewFile?.content || "",
           finding_title: activeChatFinding.title,
           finding_description: activeChatFinding.description,
           message: userMessage,
@@ -245,25 +246,29 @@ export function ReviewPageContent() {
 
     if (!session?.accessToken) return;
 
-    // 1. Fetch all selected file contents
+    // 1. Fetch all selected file contents concurrently
     const fileContents: string[] = [];
+    const fetchedFiles: { path: string; content: string }[] = [];
 
-    // Let's get the active file ready for the done view right now
-    const firstFile = selectedFilesList[0];
-    if (firstFile) {
+    await Promise.all(selectedFilesList.map(async (file) => {
       try {
-        const res = await fetch(`https://api.github.com/repos/${repoFullName}/contents/${firstFile}`, {
+        const res = await fetch(`https://api.github.com/repos/${repoFullName}/contents/${file}`, {
           headers: { Authorization: `Bearer ${session.accessToken}`, Accept: "application/vnd.github.v3+json" }
         });
         const data = await res.json();
         if (data.content) {
           const decoded = atob(data.content.replace(/\n/g, ""));
-          setActiveReviewFile({ path: firstFile, content: decoded });
-          fileContents.push(`// FILE: ${firstFile}\n${decoded}`);
+          fetchedFiles.push({ path: file, content: decoded });
         }
       } catch (e) {
-        console.error("Failed to load first file", e);
+        console.error(`Failed to load file ${file}`, e);
       }
+    }));
+
+    if (fetchedFiles.length > 0) {
+      setReviewedFiles(fetchedFiles);
+      setActiveReviewFile(fetchedFiles[0]);
+      fetchedFiles.forEach(f => fileContents.push(`// FILE: ${f.path}\n${f.content}`));
     }
 
     // Auto-fetch README for global context
@@ -330,7 +335,7 @@ export function ReviewPageContent() {
                   
                   const mappedFindings: CodeFinding[] = findings.map((f: any, idx: number) => ({
                     id: `${agent_id}-${idx}-${Math.random().toString(36).substring(2, 9)}`,
-                    file: firstFile || "unknown", // Map to first file since we concatenated
+                    file: f.file_path || (fetchedFiles.length > 0 ? fetchedFiles[0].path : "unknown"), // Map to file
                     line: f.line || 1,
                     severity: f.severity || "info",
                     agent: targetAgent.name,
@@ -351,7 +356,7 @@ export function ReviewPageContent() {
                 const { findings } = event.data;
                 const mappedFindings: CodeFinding[] = findings.map((f: any, idx: number) => ({
                     id: `lead-${idx}-${Math.random().toString(36).substring(2, 9)}`,
-                    file: firstFile || "unknown",
+                    file: f.file_path || (fetchedFiles.length > 0 ? fetchedFiles[0].path : "unknown"),
                     line: f.line || 1,
                     severity: f.severity || "info",
                     agent: "Lead Reviewer",
@@ -386,6 +391,7 @@ export function ReviewPageContent() {
     setReviewMode("selection");
     setAgents((prev) => prev.map((a) => ({ ...a, status: "idle" as const, findings: 0 })));
     setReviewFindings([]);
+    setReviewedFiles([]);
     setActiveReviewFile(null);
   };
 
@@ -490,7 +496,9 @@ export function ReviewPageContent() {
                 reviewFindings={reviewFindings}
                 severityFilter={severityFilter}
                 setSeverityFilter={setSeverityFilter}
+                reviewedFiles={reviewedFiles}
                 activeReviewFile={activeReviewFile}
+                setActiveReviewFile={setActiveReviewFile}
                 activeChatFinding={activeChatFinding}
                 chatMessages={chatMessages}
                 chatInput={chatInput}
@@ -500,6 +508,8 @@ export function ReviewPageContent() {
                 closeChat={closeChat}
                 sendChatMessage={sendChatMessage}
                 resetReview={resetReview}
+                repoName={repoFullName}
+                githubToken={session?.accessToken || ""}
               />
             )}
           </div>

@@ -1,11 +1,14 @@
 import { CodeFinding, ChatMessage } from "./types";
 import { CheckCircle2, FileCode, AlertTriangle, GitBranch, MessageCircle, X, Send } from "lucide-react";
+import { useState } from "react";
 
 interface ReviewResultsViewProps {
   reviewFindings: CodeFinding[];
   severityFilter: string;
   setSeverityFilter: (val: string) => void;
+  reviewedFiles: { path: string; content: string }[];
   activeReviewFile: { path: string; content: string } | null;
+  setActiveReviewFile: (file: { path: string; content: string }) => void;
   activeChatFinding: CodeFinding | null;
   chatMessages: ChatMessage[];
   chatInput: string;
@@ -15,13 +18,17 @@ interface ReviewResultsViewProps {
   closeChat: () => void;
   sendChatMessage: () => void;
   resetReview: () => void;
+  repoName: string;
+  githubToken: string;
 }
 
 export function ReviewResultsView({
   reviewFindings,
   severityFilter,
   setSeverityFilter,
+  reviewedFiles,
   activeReviewFile,
+  setActiveReviewFile,
   activeChatFinding,
   chatMessages,
   chatInput,
@@ -30,10 +37,100 @@ export function ReviewResultsView({
   startChat,
   closeChat,
   sendChatMessage,
-  resetReview
+  resetReview,
+  repoName,
+  githubToken
 }: ReviewResultsViewProps) {
+  const [fixingFinding, setFixingFinding] = useState<CodeFinding | null>(null);
+  const [fixStatus, setFixStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [fixMessage, setFixMessage] = useState("");
+  const [prUrl, setPrUrl] = useState("");
+
+  const handleApplyFix = async (finding: CodeFinding) => {
+    setFixingFinding(finding);
+    setFixStatus("loading");
+    setFixMessage("Initializing auto-fix...");
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${apiUrl}/api/apply-fix`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          repo_name: repoName,
+          github_token: githubToken,
+          file_path: finding.file,
+          diff: finding.suggested_diff,
+          title: finding.title
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFixStatus("success");
+        setPrUrl(data.pr_url);
+        setFixMessage("Pull Request created successfully!");
+      } else {
+        setFixStatus("error");
+        setFixMessage(data.error || "Failed to create PR.");
+      }
+    } catch (e: any) {
+      setFixStatus("error");
+      setFixMessage(e.message);
+    }
+  };
+
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden relative">
+      {/* Auto-fix Modal */}
+      {fixingFinding && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-border">
+            <div className="p-4 border-b border-border flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <GitBranch className="w-4 h-4 text-primary" />
+                GitHub Integration
+              </h3>
+              {fixStatus !== "loading" && (
+                <button onClick={() => setFixingFinding(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <div className="p-6 flex flex-col items-center justify-center text-center">
+              {fixStatus === "loading" && (
+                <>
+                  <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
+                  <p className="text-sm font-bold text-slate-700">{fixMessage}</p>
+                  <p className="text-xs text-slate-500 mt-2">Creating branch, applying diff, and opening Pull Request...</p>
+                </>
+              )}
+              {fixStatus === "success" && (
+                <>
+                  <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                    <CheckCircle2 className="w-7 h-7" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-700">{fixMessage}</p>
+                  <a href={prUrl} target="_blank" rel="noreferrer" className="mt-5 px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors shadow-md">
+                    View Pull Request
+                  </a>
+                </>
+              )}
+              {fixStatus === "error" && (
+                <>
+                  <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+                    <AlertTriangle className="w-7 h-7" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-700">Error Creating PR</p>
+                  <p className="text-xs text-red-600 mt-3 bg-red-50 p-3 rounded border border-red-100 max-h-32 overflow-auto w-full font-mono text-left">{fixMessage}</p>
+                  <button onClick={() => setFixingFinding(null)} className="mt-5 px-5 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-200 transition-colors border border-slate-200">
+                    Close
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Summary bar */}
       <div className="px-4 py-3 border-b border-border bg-slate-50/50 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
@@ -68,9 +165,21 @@ export function ReviewResultsView({
         <div className="flex-1 overflow-auto bg-[#fafbfc]">
           {activeReviewFile ? (
             <div className="font-mono text-[13px]">
-              <div className="sticky top-0 z-10 bg-white border-b border-border px-4 py-2 flex items-center gap-2">
-                <FileCode className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-bold text-foreground">{activeReviewFile.path}</span>
+              <div className="sticky top-0 z-10 bg-white border-b border-border flex items-center overflow-x-auto">
+                {reviewedFiles.map((file) => (
+                  <button
+                    key={file.path}
+                    onClick={() => setActiveReviewFile(file)}
+                    className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition-colors whitespace-nowrap ${
+                      activeReviewFile.path === file.path
+                        ? "border-primary text-foreground bg-slate-50"
+                        : "border-transparent text-muted-foreground hover:bg-slate-50"
+                    }`}
+                  >
+                    <FileCode className={`w-3.5 h-3.5 ${activeReviewFile.path === file.path ? "text-primary" : "text-muted-foreground"}`} />
+                    {file.path.split('/').pop()}
+                  </button>
+                ))}
               </div>
               {activeReviewFile.content.split("\n").map((codeLine, lineIdx) => {
                 const lineNum = lineIdx + 1;
@@ -129,7 +238,7 @@ export function ReviewResultsView({
                                 <div className="bg-slate-100 px-3 py-1.5 flex justify-between items-center border-b border-slate-200">
                                   <span className="font-bold text-slate-700 uppercase tracking-wider text-[9px] flex items-center gap-1.5"><GitBranch className="w-3 h-3"/> Suggested Fix</span>
                                   <button 
-                                    onClick={() => alert("GitHub Integration: This would create a new branch, apply the diff, and open a Pull Request!")}
+                                    onClick={() => handleApplyFix(finding)}
                                     className="bg-primary hover:bg-primary/90 text-white px-2.5 py-1 rounded-md text-[10px] font-bold transition-colors shadow-sm"
                                   >
                                     Apply Fix
@@ -185,7 +294,11 @@ export function ReviewResultsView({
                   .map((finding) => (
                   <div
                     key={finding.id}
-                    className="w-full text-left px-3 py-2.5 rounded-lg border border-transparent text-xs hover:bg-slate-50 transition-colors cursor-default"
+                    onClick={() => {
+                      const file = reviewedFiles.find(f => f.path === finding.file);
+                      if (file) setActiveReviewFile(file);
+                    }}
+                    className={`w-full text-left px-3 py-2.5 rounded-lg border text-xs transition-colors cursor-pointer ${activeReviewFile?.path === finding.file ? "border-slate-200 bg-slate-50" : "border-transparent hover:bg-slate-50"}`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: finding.agentColor }}></span>

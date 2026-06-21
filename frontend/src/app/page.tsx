@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Shield, Zap, Bot, ArrowRight, CheckCircle2, ChevronDown, Code2, FileSearch, GitBranch, BookOpen, TestTube2, Layers } from "lucide-react";
@@ -39,13 +39,6 @@ function LandingPage() {
     <div className="w-full">
       {/* Hero Section */}
       <section className="pt-24 pb-16 px-6 text-center max-w-5xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-sm font-semibold text-primary mb-8">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-          </span>
-          Powered by Google Gemini 3.5 Flash
-        </div>
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground leading-[1.1] mb-8">
           Ship Better Code with <br className="hidden md:block"/>
           <span className="text-primary">AI-Powered Swarms</span>
@@ -54,10 +47,10 @@ function LandingPage() {
           From bug detection to auto-fixing with live Git Diffs. Automate your entire code review process with a hierarchical, RAG-enabled team of autonomous agents.
         </p>
         <div className="flex items-center justify-center gap-4">
-          <button className="px-8 py-4 rounded-lg bg-primary text-white font-bold text-lg hover:bg-primary-hover shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all">
+          <button onClick={() => signIn("github", { callbackUrl: "/dashboard" })} className="px-8 py-4 rounded-lg bg-primary text-white font-bold text-lg hover:bg-primary-hover shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all">
             Get Started for Free <ArrowRight className="w-5 h-5" />
           </button>
-          <button className="px-8 py-4 rounded-lg border-2 border-border font-bold text-lg hover:bg-muted text-foreground transition-all">
+          <button onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })} className="px-8 py-4 rounded-lg border-2 border-border font-bold text-lg hover:bg-muted text-foreground transition-all">
             View Demo
           </button>
         </div>
@@ -66,20 +59,8 @@ function LandingPage() {
       {/* Swarm Animation Section */}
       <SwarmVisualization />
 
-      {/* Social Proof */}
-      <section className="py-12 bg-muted border-y border-border">
-        <p className="text-center text-sm font-bold text-muted-foreground uppercase tracking-widest mb-8">Trusted by forward-thinking engineering teams</p>
-        <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale">
-           <span className="text-2xl font-black">Google</span>
-           <span className="text-2xl font-black">Meta</span>
-           <span className="text-2xl font-black">Stripe</span>
-           <span className="text-2xl font-black">Netflix</span>
-           <span className="text-2xl font-black">Vercel</span>
-        </div>
-      </section>
-
       {/* How it works - The Workflow */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
+      <section id="how-it-works" className="py-24 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-extrabold mb-6">How The Swarm Works</h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -96,7 +77,7 @@ function LandingPage() {
           <div className="glass-panel p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 text-8xl font-black text-slate-100/50">2</div>
             <h3 className="text-2xl font-bold mb-4 relative z-10">Concurrent Analysis</h3>
-            <p className="text-muted-foreground relative z-10 leading-relaxed">Powered by Gemini 3.5 Flash, our Orchestrator dispatches eight highly specialized worker agents. They analyze your code in parallel across security, bugs, performance, style, docs, dependencies, testing, and architecture.</p>
+            <p className="text-muted-foreground relative z-10 leading-relaxed">Powered by Gemini 2.5 Flash, our Orchestrator dispatches eight highly specialized worker agents. They analyze your code in parallel across security, bugs, performance, style, docs, dependencies, testing, and architecture.</p>
           </div>
           <div className="glass-panel p-8 relative overflow-hidden border-t-4 border-t-primary">
             <div className="absolute top-0 right-0 p-4 text-8xl font-black text-slate-100/50">3</div>
@@ -107,7 +88,7 @@ function LandingPage() {
       </section>
 
       {/* Meet the Agents Section */}
-      <section className="py-24 px-6 bg-muted border-y border-border">
+      <section id="agents" className="py-24 px-6 bg-muted border-y border-border">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-extrabold mb-6">Meet the Code Review Crew</h2>
@@ -212,7 +193,7 @@ function LandingPage() {
       {/* Final CTA */}
       <section className="py-24 bg-primary text-white text-center px-6">
         <h2 className="text-4xl md:text-6xl font-extrabold mb-8">Build a Faster, Smarter Codebase Today.</h2>
-        <button className="px-10 py-5 rounded-lg bg-white text-primary font-bold text-xl hover:bg-gray-100 shadow-xl flex items-center gap-2 mx-auto transition-all hover:-translate-y-1">
+        <button onClick={() => signIn("github", { callbackUrl: "/dashboard" })} className="px-10 py-5 rounded-lg bg-white text-primary font-bold text-xl hover:bg-gray-100 shadow-xl flex items-center gap-2 mx-auto transition-all hover:-translate-y-1">
           Connect Your GitHub <ArrowRight className="w-6 h-6" />
         </button>
       </section>
@@ -333,40 +314,54 @@ function ArchitectureDiagram() {
       <div className="text-center mb-16">
         <h2 className="text-4xl md:text-5xl font-extrabold mb-6">System Architecture</h2>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-          A powerful hierarchical pipeline with global codebase context.
+          A powerful hierarchical pipeline built on Google's scalable infrastructure.
         </p>
       </div>
       
       <div className="flex flex-col items-center gap-6 font-mono text-sm">
-        {/* User Input */}
-        <div className="bg-white border-2 border-slate-300 p-4 rounded-xl shadow-sm w-72 text-center font-bold">
-          <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wider">Step 1</div>
-          User Selects Repo & Files
+        {/* Frontend Layer */}
+        <div className="bg-white border-2 border-slate-300 p-5 rounded-xl shadow-sm w-80 text-center font-bold relative">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-3 py-1 rounded-full text-[10px] uppercase tracking-wider">Frontend</div>
+          <div className="text-lg text-foreground mt-2 mb-1">Next.js UI Framework</div>
+          <p className="text-xs text-muted-foreground font-sans font-medium">User selects repo, visualizes live Server-Sent Events (SSE) from the Swarm.</p>
         </div>
         
         <div className="w-0.5 h-8 bg-slate-300"></div>
         
-        {/* Context & Planning */}
-        <div className="flex flex-col md:flex-row gap-8 w-full max-w-3xl justify-center">
-          <div className="bg-indigo-50 border-2 border-indigo-200 p-5 rounded-xl shadow-sm text-center flex-1">
-             <div className="text-xs text-indigo-600 font-bold mb-2 uppercase tracking-widest">1. Architecture Advisor</div>
-             <p className="text-indigo-900 leading-relaxed text-xs font-sans">Runs first to analyze structural patterns and sets the architectural context for all other agents.</p>
+        {/* Backend / Infra Layer */}
+        <div className="bg-blue-50 border-2 border-blue-200 p-5 rounded-xl shadow-sm w-80 text-center relative">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold">Backend Infrastructure</div>
+          <div className="text-lg text-blue-900 font-bold mt-2 mb-1">Google Cloud Run (FastAPI)</div>
+          <p className="text-xs text-blue-700 font-sans font-medium">Serverless container managing asynchronous tasks and high-concurrency connections.</p>
+        </div>
+
+        <div className="w-0.5 h-8 bg-slate-300"></div>
+        
+        {/* Context & RAG */}
+        <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl justify-center">
+          <div className="bg-indigo-50 border-2 border-indigo-200 p-6 rounded-xl shadow-sm text-center flex-1 relative">
+             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold">Step 1</div>
+             <div className="text-sm text-indigo-900 font-bold mb-2 uppercase tracking-widest">Architecture Advisor</div>
+             <p className="text-indigo-800 leading-relaxed text-xs font-sans font-medium">Runs first to analyze structural patterns and sets the global architectural context for the entire swarm.</p>
           </div>
-          <div className="bg-slate-800 text-white border-2 border-slate-700 p-5 rounded-xl shadow-sm text-center flex-1 relative overflow-hidden">
-             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] bg-[length:10px_10px]"></div>
-             <div className="text-xs text-slate-300 font-bold mb-2 uppercase tracking-widest relative z-10">2. Tool Retrieval (RAG)</div>
-             <p className="text-slate-200 leading-relaxed text-xs font-sans relative z-10">Agents use GitHub API tools to search the entire codebase and read files on-demand for global context.</p>
+          <div className="bg-slate-800 text-white border-2 border-slate-700 p-6 rounded-xl shadow-sm text-center flex-1 relative">
+             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,white_1px,transparent_1px)] bg-[length:10px_10px] rounded-xl pointer-events-none"></div>
+             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-600 text-white px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold z-10">Step 2</div>
+             <div className="text-sm text-slate-100 font-bold mb-2 uppercase tracking-widest relative z-10 mt-2">GitHub API RAG Search</div>
+             <p className="text-slate-300 leading-relaxed text-xs font-sans font-medium relative z-10">Agents use dynamic tools to retrieve codebase context on-demand, fetching function definitions and imports (RAG).</p>
           </div>
         </div>
 
         <div className="w-0.5 h-8 bg-slate-300"></div>
 
-        {/* Worker Swarm */}
-        <div className="bg-blue-50 border-2 border-blue-200 p-6 rounded-xl shadow-sm w-full max-w-4xl text-center">
-          <div className="text-xs text-blue-600 font-bold mb-5 uppercase tracking-widest">3. Parallel Execution Swarm (Gemini 3.5 Flash)</div>
+        {/* Worker Swarm (Gemini SDK) */}
+        <div className="bg-blue-50 border-2 border-blue-200 p-6 rounded-xl shadow-sm w-full max-w-4xl text-center relative">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold">Step 3</div>
+          <div className="text-sm text-blue-900 font-bold mb-2 uppercase tracking-widest">Parallel Execution Swarm</div>
+          <p className="text-blue-700 font-sans font-medium text-xs mb-5">Powered by the new <b>Google GenAI SDK</b> and <b>Gemini 2.5 Flash</b> for massive concurrency and speed.</p>
           <div className="flex flex-wrap justify-center gap-3">
              {["Security", "Bugs", "Performance", "Style", "Docs", "Dependencies", "Testing"].map(agent => (
-                <div key={agent} className="bg-white px-4 py-2 border border-blue-100 rounded-lg shadow-sm font-semibold text-slate-700">
+                <div key={agent} className="bg-white px-5 py-2.5 border border-blue-100 rounded-lg shadow-sm font-bold text-slate-700 text-xs">
                   {agent}
                 </div>
              ))}
@@ -376,10 +371,11 @@ function ArchitectureDiagram() {
         <div className="w-0.5 h-8 bg-slate-300"></div>
 
         {/* Lead Reviewer */}
-        <div className="bg-emerald-50 border-2 border-emerald-200 p-6 rounded-xl shadow-sm w-full max-w-2xl text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-300 to-teal-400"></div>
-          <div className="text-xs text-emerald-700 font-bold mb-2 uppercase tracking-widest">4. Lead Reviewer</div>
-          <p className="text-emerald-900 mb-4 font-sans text-sm font-semibold">Deduplicates, Resolves Conflicts, and Generates Git Diffs</p>
+        <div className="bg-emerald-50 border-2 border-emerald-200 p-6 rounded-xl shadow-sm w-full max-w-2xl text-center relative">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold z-10">Step 4</div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-300 to-teal-400 rounded-t-xl"></div>
+          <div className="text-sm text-emerald-900 font-bold mb-2 uppercase tracking-widest mt-2">Lead Reviewer Synthesis</div>
+          <p className="text-emerald-800 mb-5 font-sans text-xs font-medium">Deduplicates, Resolves Conflicts, and Generates unified Git Diffs.</p>
           <div className="bg-slate-900 px-4 py-3 border border-emerald-900/50 rounded-lg font-mono text-xs text-left overflow-x-auto shadow-inner">
              <div className="text-red-400">- const result = processData(data);</div>
              <div className="text-green-400">+ const result = useMemo(() =&gt; processData(data), [data]);</div>
@@ -394,7 +390,7 @@ function FAQSection() {
   const faqs = [
     {
       q: "How does the multi-agent swarm actually work?",
-      a: "When you submit a repository, our Lead Orchestrator analyzes the file structure and dispatches eight specialized Gemini 3.5 Flash agents in parallel. Each agent has a distinct system prompt laser-focused on one domain (security, bugs, performance, style, docs, dependencies, testing, architecture). Results are collected, deduplicated, and synthesized into a single graded report."
+      a: "When you submit a repository, our Lead Orchestrator analyzes the file structure and dispatches eight specialized Gemini 2.5 Flash agents in parallel. Each agent has a distinct system prompt laser-focused on one domain (security, bugs, performance, style, docs, dependencies, testing, architecture). Results are collected, deduplicated, and synthesized into a single graded report."
     },
     {
       q: "Why 8 agents instead of one?",
@@ -425,7 +421,7 @@ function FAQSection() {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   return (
-    <section className="py-24 px-6 max-w-4xl mx-auto">
+    <section id="faq" className="py-24 px-6 max-w-4xl mx-auto">
       <div className="text-center mb-16">
         <h2 className="text-4xl font-extrabold mb-4">Frequently Asked Questions</h2>
         <p className="text-lg text-muted-foreground">Everything you need to know about the architecture and privacy.</p>
@@ -457,43 +453,24 @@ function FAQSection() {
 function Footer() {
   return (
     <footer className="bg-slate-50 border-t border-border pt-20 pb-10 px-6 mt-auto">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-        <div className="col-span-1 md:col-span-1">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12 mb-16">
+        <div className="max-w-md">
           <div className="flex items-center gap-2 mb-6">
             <Code2 className="w-6 h-6 text-primary" />
             <span className="font-extrabold text-lg tracking-tight text-foreground">CodeReview<span className="text-primary">Crew</span></span>
           </div>
-          <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+          <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-md">
             An elite swarm of autonomous AI agents designed to automate your entire code review process. Built for the modern developer.
           </p>
         </div>
-        
-        <div>
-          <h4 className="font-bold mb-6 uppercase tracking-wider text-sm">Product</h4>
-          <ul className="space-y-4 text-sm text-muted-foreground font-medium">
-            <li><a href="#" className="hover:text-primary transition-colors">Features</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Pricing</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Changelog</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Integrations</a></li>
-          </ul>
-        </div>
 
         <div>
-          <h4 className="font-bold mb-6 uppercase tracking-wider text-sm">Resources</h4>
+          <h4 className="font-bold mb-6 uppercase tracking-wider text-sm">Tech Stack</h4>
           <ul className="space-y-4 text-sm text-muted-foreground font-medium">
-            <li><a href="#" className="hover:text-primary transition-colors">Documentation</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">API Reference</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Community Blog</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Open Source</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="font-bold mb-6 uppercase tracking-wider text-sm">Legal</h4>
-          <ul className="space-y-4 text-sm text-muted-foreground font-medium">
-            <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Terms of Service</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Security</a></li>
+            <li><a href="https://nextjs.org/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Next.js</a></li>
+            <li><a href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Google GenAI SDK</a></li>
+            <li><a href="https://deepmind.google/technologies/gemini/flash/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Google Gemini 3.5</a></li>
+            <li><a href="https://cloud.google.com/run" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Google Cloud Run</a></li>
           </ul>
         </div>
       </div>
@@ -501,9 +478,7 @@ function Footer() {
       <div className="max-w-7xl mx-auto border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground font-medium">
         <p>© 2026 Code Review Crew. Built for the Gemini Hackathon.</p>
         <div className="flex items-center gap-8 mt-4 md:mt-0">
-          <a href="#" className="hover:text-foreground transition-colors">Twitter</a>
-          <a href="#" className="hover:text-foreground transition-colors">GitHub</a>
-          <a href="#" className="hover:text-foreground transition-colors">Discord</a>
+          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
         </div>
       </div>
     </footer>

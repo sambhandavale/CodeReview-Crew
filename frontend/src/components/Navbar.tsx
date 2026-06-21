@@ -63,15 +63,15 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <a href="#how-it-works" className="px-4 py-2 rounded-lg text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-slate-50 transition-colors">
+              <Link href="/#how-it-works" className="px-4 py-2 rounded-lg text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-slate-50 transition-colors">
                 How it Works
-              </a>
-              <a href="#agents" className="px-4 py-2 rounded-lg text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-slate-50 transition-colors">
+              </Link>
+              <Link href="/#agents" className="px-4 py-2 rounded-lg text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-slate-50 transition-colors">
                 Agents
-              </a>
-              <a href="#faq" className="px-4 py-2 rounded-lg text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-slate-50 transition-colors">
+              </Link>
+              <Link href="/#faq" className="px-4 py-2 rounded-lg text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-slate-50 transition-colors">
                 FAQ
-              </a>
+              </Link>
             </>
           )}
         </div>

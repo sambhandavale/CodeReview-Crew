@@ -7,13 +7,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 client = genai.Client()
-MODEL_FLASH = "gemini-3.5-flash"
+MODEL_FLASH = "gemini-2.5-flash"
 
 import asyncio
-api_semaphore = asyncio.Semaphore(1)
+api_semaphore = asyncio.Semaphore(2)
 
 async def rate_limited_chat_send(chat, prompt, agent_name):
-    for attempt in range(5):
+    for attempt in range(7):
         try:
             async with api_semaphore:
                 response = await chat.send_message(prompt)
@@ -22,15 +22,17 @@ async def rate_limited_chat_send(chat, prompt, agent_name):
         except Exception as e:
             err_str = str(e)
             if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "503" in err_str or "UNAVAILABLE" in err_str:
-                delay = 8 + (attempt * 4)
-                print(f"Agent {agent_name} hit rate/demand limit in research. Retrying in {delay}s... (Attempt {attempt+1}/5)")
+                delay = 2 ** attempt * 2
+                if delay > 60:
+                    delay = 60 # Cap delay at 60s to wait for minute reset
+                print(f"Agent {agent_name} hit rate/demand limit in research. Retrying in {delay}s... (Attempt {attempt+1}/7)")
                 await asyncio.sleep(delay)
             else:
                 raise e
     raise Exception("Rate limit retries exhausted")
 
 async def rate_limited_generate(contents, config, agent_name):
-    for attempt in range(5):
+    for attempt in range(7):
         try:
             async with api_semaphore:
                 response = await client.aio.models.generate_content(
@@ -43,14 +45,17 @@ async def rate_limited_generate(contents, config, agent_name):
         except Exception as e:
             err_str = str(e)
             if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "503" in err_str or "UNAVAILABLE" in err_str:
-                delay = 8 + (attempt * 4)
-                print(f"Agent {agent_name} hit rate limit in review. Retrying in {delay}s... (Attempt {attempt+1}/5)")
+                delay = 2 ** attempt * 2
+                if delay > 60:
+                    delay = 60 # Cap delay at 60s
+                print(f"Agent {agent_name} hit rate limit in review. Retrying in {delay}s... (Attempt {attempt+1}/7)")
                 await asyncio.sleep(delay)
             else:
                 raise e
     raise Exception("Rate limit retries exhausted")
 
 class Finding(BaseModel):
+    file_path: str = Field(description="The file path where the issue occurs, as provided in the // FILE: header")
     line: int = Field(description="The line number where the issue or suggestion occurs")
     title: str = Field(description="A short, descriptive title of the finding")
     description: str = Field(description="A detailed explanation of the issue")
@@ -64,7 +69,7 @@ class FindingList(BaseModel):
 async def run_agent(agent_id: str, agent_name: str, agent_focus: str, code: str, custom_instructions: str | None = None, architecture_context: str | None = None, github_token: str | None = None, repo_name: str | None = None) -> str:
     """Runs a single Gemini model call for a specific agent persona."""
     from tools import get_agent_tools
-    agent_tools = get_agent_tools(repo_name, github_token)
+    agent_tools = get_agent_tools(repo_name, github_token) if agent_id == "advisor" else []
 
     research_notes = ""
     if agent_tools:

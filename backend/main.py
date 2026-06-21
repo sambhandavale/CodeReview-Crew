@@ -6,6 +6,7 @@ import asyncio
 
 from orchestrator import run_code_review_swarm
 from agents import stream_chat_with_agent
+from github_pr import create_pull_request
 
 app = FastAPI()
 
@@ -22,6 +23,13 @@ class ReviewRequest(BaseModel):
     custom_instructions: str | None = None
     github_token: str | None = None
     repo_name: str | None = None
+
+class FixRequest(BaseModel):
+    repo_name: str
+    github_token: str
+    file_path: str
+    diff: str
+    title: str
 
 class ChatRequest(BaseModel):
     agent_name: str
@@ -55,6 +63,17 @@ async def chat_code(request: ChatRequest):
         event_generator(),
         media_type="text/plain"
     )
+
+@app.post("/api/apply-fix")
+async def apply_fix_endpoint(request: FixRequest):
+    try:
+        pr_url = await create_pull_request(
+            request.repo_name, request.github_token, request.file_path, request.diff, request.title
+        )
+        return {"success": True, "pr_url": pr_url}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 
 if __name__ == "__main__":
     import uvicorn
