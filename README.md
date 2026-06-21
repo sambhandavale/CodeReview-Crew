@@ -135,7 +135,6 @@ graph TD
 | **Authentication** | `NextAuth.js` | Managing secure GitHub OAuth login flows to access private repositories. |
 | **Backend API** | `Python 3.12`, `FastAPI` | High-performance asynchronous backend server tailored for AI orchestration. |
 | **AI Integration** | `google-genai` SDK | Official Gemini SDK to interact with `Gemini 2.5 Flash`. |
-| **Concurrency** | `asyncio` | Python library to run the Swarm in true parallel without blocking threads. |
 | **Data Streaming** | `Server-Sent Events (SSE)` | Streaming agent findings in real-time to the Next.js client. |
 | **Deployment** | `Google Cloud Run` | Serverless container hosting for massive scalability of both Frontend and Backend. |
 | **CI/CD** | `Google Cloud Build` | Continuous automated deployment from the GitHub repository. |
